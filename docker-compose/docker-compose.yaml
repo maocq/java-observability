@@ -1,0 +1,87 @@
+version: "3"
+services:
+
+  tempo:
+    image: grafana/tempo:latest
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./tempo-local.yaml:/etc/tempo.yaml
+      #- ./tempo-data:/tmp/tempo
+    ports:
+      - "14268:14268"  # jaeger ingest
+      - "3200:3200"   # tempo
+      - "4317:4317"  # otlp grpc
+      - "4318:4318"  # otlp http
+      - "9411:9411"   # zipkin
+    networks:
+        - network
+
+  loki:
+    image: grafana/loki:2.6.1
+    ports:
+      - "3100:3100"
+    command: -config.file=/mnt/config/loki-config.yaml
+    volumes:
+      - ./loki-config.yaml:/mnt/config/loki-config.yaml
+    networks:
+        - network
+
+  prometheus:
+    image: prom/prometheus:latest
+    command:
+      - --config.file=/etc/prometheus.yaml
+      #- --web.enable-remote-write-receiver
+      #- --enable-feature=exemplar-storage
+    volumes:
+      #- ../shared/prometheus.yaml:/etc/prometheus.yaml
+      - ./prometheus.yaml:/etc/prometheus.yaml
+    ports:
+      - "9090:9090"
+    networks:
+        - network
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    ports:
+      - "3000:3000"
+    networks:
+        - network
+
+  db-account:
+      image: 'postgres:13.1-alpine'
+      container_name: db-account
+      environment:
+          - POSTGRES_USER=compose-postgres
+          - POSTGRES_PASSWORD=compose-postgres
+      ports:
+          - "5432:5432"
+      volumes:
+          - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      networks:
+          - network
+
+  java-observability-ms:
+      container_name: java-observability-ms
+      build:
+          context: ../
+          dockerfile: Dockerfile
+      image: java-observability-ms:latest
+      depends_on:
+          - db-account
+          - tempo
+          - loki
+          - prometheus
+      ports:
+          - 8080:8080
+      networks:
+          - network
+
+networks:
+    network:
+        driver: bridge
