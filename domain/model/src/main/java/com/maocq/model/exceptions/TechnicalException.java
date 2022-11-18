@@ -2,15 +2,18 @@ package com.maocq.model.exceptions;
 
 import com.maocq.model.exceptions.messages.ErrorMessage;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
 public class TechnicalException extends RuntimeException {
     private final ErrorMessage errorMessage;
 
-    public TechnicalException(Throwable cause, ErrorMessage errorMessage) {
-        super(cause);
+    public TechnicalException(ErrorMessage errorMessage) {
+        super(errorMessage.getMessage());
+        this.errorMessage = errorMessage;
+    }
+
+    public TechnicalException(ErrorMessage errorMessage, Throwable cause) {
+        super(errorMessage.getMessage(), cause);
         this.errorMessage = errorMessage;
     }
 }
