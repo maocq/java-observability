@@ -44,7 +44,8 @@ public class ExceptionHandler extends AbstractErrorWebExceptionHandler {
                         .bodyValue(Map.of("code", error.getErrorMessage().getCode())))
 
                 .onErrorResume(ResponseStatusException.class, error -> ServerResponse.status(error.getStatus()).build())
-                .onErrorResume(error -> ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).build())
+                .onErrorResume(error -> ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .bodyValue(Map.of("code", "Internal server error")))
                 .cast(ServerResponse.class);
     }
 }

@@ -8,6 +8,8 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+
 @Component
 @RequiredArgsConstructor
 public class Handler {
@@ -23,5 +25,15 @@ public class Handler {
                 .orElse("200");
 
         return ServerResponse.ok().body(accountUseCase.account(status), Account.class);
+    }
+
+    public Mono<ServerResponse> listenGETLatency(ServerRequest serverRequest) {
+        var latency = serverRequest.queryParam("delay")
+                .orElse("0");
+
+        var response = Mono.fromSupplier(() -> Integer.valueOf(latency))
+                .flatMap(time -> Mono.delay(Duration.ofMillis(time)))
+                .map(x -> "Ok");
+        return ServerResponse.ok().body(response, String.class);
     }
 }
