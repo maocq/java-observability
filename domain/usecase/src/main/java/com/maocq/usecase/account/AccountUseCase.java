@@ -1,5 +1,7 @@
 package com.maocq.usecase.account;
 
+import java.util.UUID;
+
 import com.maocq.model.account.Account;
 import com.maocq.model.account.gateways.AccountInfo;
 import com.maocq.model.account.gateways.AccountRepository;
@@ -14,7 +16,7 @@ public class AccountUseCase {
     private final AccountInfo accountInfo;
 
     public Mono<Account> account(String status) {
-        log.info("Account UseCase");
+        log.info("Account UseCase " + UUID.randomUUID());
 
         return accountInfo.get("200")
                 .flatMap(x -> accountInfo.get(status))
